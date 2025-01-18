@@ -18,7 +18,7 @@ wss.on("connection", (socket:WebSocket)=>{
   socket.on("message",(message)=>{
     console.log(message.toString());
     try {
-      const parsedMessage = JSON.parse(message.toString());
+      let parsedMessage = JSON.parse(message.toString());
 
       if(parsedMessage.type === "create")
       {
@@ -29,16 +29,14 @@ wss.on("connection", (socket:WebSocket)=>{
       else if(parsedMessage.type === "join")
       {
         socketMap[parsedMessage.payload.roomId].push({socket,username:parsedMessage.payload.username});
-        socket.send(JSON.stringify({type:"joined"}));
+        socket.send(JSON.stringify({type:"joined",roomId:parsedMessage.payload.roomId}));
       }
       else if(parsedMessage.type === "chat") {
-        console.log(socketMap[parsedMessage.payload.roomId])
-        console.log(socketMap[parsedMessage.payload.roomId].includes({socket,username:parsedMessage.payload.username}))
-        
         if (socketMap[parsedMessage.payload.roomId]) {
           socketMap[parsedMessage.payload.roomId].forEach((user) => {
+            console.log("user",user)
             if (user.socket !== socket) {
-            user.socket.send(JSON.stringify({"type": "chat", "message" : parsedMessage.payload.message}))
+            user.socket.send(JSON.stringify({"type": "chat", payload:{message:parsedMessage.payload.message,roomId:parsedMessage.payload.roomId}}));
             }
           })
         }
